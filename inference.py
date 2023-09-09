@@ -147,7 +147,7 @@ def main():
                     **generation_config
                 )
                 
-                ccompute = model(inputs["input_ids"].to(device)).logits
+                compute = model(inputs["input_ids"].to(device)).logits
                 # binary_representation = [format(np.float32(item).tobytes(),'08b') for item in compute.cpu().numpy()]
                 cpu_tensor = compute
                 # 将 CPU 上的 Tensor 转换为 NumPy 数组
