@@ -147,15 +147,15 @@ def main():
                     **generation_config
                 )
                 
-                compute = model(inputs["input_ids"].to(device)).logits
+                ccompute = model(inputs["input_ids"].to(device)).logits
                 # binary_representation = [format(np.float32(item).tobytes(),'08b') for item in compute.cpu().numpy()]
                 cpu_tensor = compute
                 # 将 CPU 上的 Tensor 转换为 NumPy 数组
                 numpy_array = cpu_tensor.cpu().numpy().tobytes().hex()
-                # print(numpy_array)
+                binary_representation = bin(int(numpy_array,16))[2:]         
                 # binary_representation = [format(np.float32(item).view(np.int32), '032b') for item in numpy_array]
-                binary_representation = bin(int(numpy_array,16))[2:]
-                print(binary_representation[:8]+"..."+binary_representation[-8:])
+                
+                print("binary code: "+binary_representation[:8]+"..."+binary_representation[-8:])
                 print(compute.shape)
                 # print(binary_representation)
                 s = generation_output[0]
