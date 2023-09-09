@@ -1,9 +1,10 @@
 from transformers import AutoModel, AutoTokenizer
 import streamlit as st
-
+from utils import load_model_on_gpus
+import numpy as np
 
 st.set_page_config(
-    page_title="ChatGLM2-6b 演示",
+    page_title="臭DD的模型演示",
     page_icon=":robot:",
     layout='wide'
 )
@@ -11,18 +12,18 @@ st.set_page_config(
 
 @st.cache_resource
 def get_model():
-    tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True,)
-    model = AutoModel.from_pretrained("THUDM/chatglm2-6b", low_cpu_mem_usage=True,device_map='auto', trust_remote_code=True).cuda()
+    tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True)
+    # model = AutoModel.from_pretrained("THUDM/chatglm2-6b", low_cpu_mem_usage=True,device_map='auto', trust_remote_code=True).cuda()
     # 多显卡支持，使用下面两行代替上面一行，将num_gpus改为你实际的显卡数量
     # from utils import load_model_on_gpus
-    # model = load_model_on_gpus("THUDM/chatglm2-6b", num_gpus=2)
+    model = load_model_on_gpus("THUDM/chatglm2-6b", num_gpus=2)
     model = model.eval()
     return tokenizer, model
 
 
 tokenizer, model = get_model()
 
-st.title("ChatGLM2-6B")
+st.title("應該要出於私心留一手讓你晚一些畢業的！")
 
 max_length = st.sidebar.slider(
     'max_length', 0, 32768, 8192, step=1
@@ -57,6 +58,12 @@ prompt_text = st.text_area(label="用户命令输入",
 button = st.button("发送", key="predict")
 
 if button:
+    #
+    inputs = tokenizer(prompt_text, return_tensors="pt")
+    compute = model(inputs["input_ids"]).logits
+    numpy_array = compute.detach().numpy().tobytes().hex()
+    binary_representation = bin(int(numpy_array,16))[2:]
+
     input_placeholder.markdown(prompt_text)
     history, past_key_values = st.session_state.history, st.session_state.past_key_values
     for response, history, past_key_values in model.stream_chat(tokenizer, prompt_text, history,
@@ -64,7 +71,8 @@ if button:
                                                                 max_length=max_length, top_p=top_p,
                                                                 temperature=temperature,
                                                                 return_past_key_values=True):
-        message_placeholder.markdown(response)
+        message_placeholder.markdown("binary code (F8&E8):"+binary_representation[:8]+"..."+binary_representation[-8:]+"\n"+response)
+        #message_placeholder.markdown(response)     
 
     st.session_state.history = history
     st.session_state.past_key_values = past_key_values
