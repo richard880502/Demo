@@ -35,10 +35,8 @@ def main():
     parser.add_argument('--base_model', default=None, type=str, required=True)
     parser.add_argument('--lora_model', default="", type=str, help="If None, perform inference on the base model")
     parser.add_argument('--tokenizer_path', default=None, type=str)
-    parser.add_argument('--data_file', default=None, type=str,
-                        help="A file that contains instructions (one instruction per line)")
+    parser.add_argument('--data_file', default=None, type=str,help="A file that contains instructions (one instruction per line)")
     parser.add_argument('--with_prompt', action='store_true', help="wrap the input with the prompt automatically")
-    # parser.add_argument('--interactive', action='store_true', help="run in the instruction mode (single-turn)")
     parser.add_argument('--predictions_file', default='./predictions.json', type=str)
     parser.add_argument('--gpus', default="0", type=str)
     parser.add_argument('--only_cpu', action='store_true', help='only use CPU for inference')
@@ -172,42 +170,7 @@ def main():
                 print(f"Input_tokenizer: {inputs['input_ids']}\n")
                 print("Response: ", response)
                 print(f"Response_tokenizer: {s}\n")
-                print("\n")
-        # else:
-        #     print("Start inference.")
-        #     results = []
-        #     for index, example in enumerate(examples):
-        #         if args.with_prompt is True:
-        #             input_text = generate_prompt(instruction=example)
-        #         else:
-        #             input_text = example
-        #         inputs = tokenizer(input_text, return_tensors="pt")
-        #         generation_output = model.generate(
-        #             input_ids=inputs["input_ids"].to(device),
-        #             eos_token_id=tokenizer.eos_token_id,
-        #             pad_token_id=tokenizer.pad_token_id,
-        #             **generation_config
-        #         )                
-        #         s = generation_output[0]
-        #         output = tokenizer.decode(s, skip_special_tokens=True)
-        #         if args.with_prompt:
-        #             response = output.split("### Response:")[1].strip()
-        #         else:
-        #             response = output
-        #         print(f"======={index}=======")
-        #         print(f"Input: {example}\n")
-        #         print(f"Output: {response}\n")
-        #         print(f"tokenizer: {s}\n")
-
-        #         results.append({"Input": input_text, "Output": response})
-
-        #     dirname = os.path.dirname(args.predictions_file)
-        #     os.makedirs(dirname, exist_ok=True)
-        #     with open(args.predictions_file, 'w') as f:
-        #         json.dump(results, f, ensure_ascii=False, indent=2)
-        #     with open(dirname + '/generation_config.json', 'w') as f:
-        #         json.dump(generation_config, f, ensure_ascii=False, indent=2)
-
+                print("\n")       
 
 if __name__ == '__main__':
     main()
