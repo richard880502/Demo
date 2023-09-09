@@ -6,6 +6,8 @@
 import argparse
 import json
 import os
+import numpy as np
+import struct
 
 import torch
 from peft import PeftModel
@@ -36,7 +38,7 @@ def main():
     parser.add_argument('--data_file', default=None, type=str,
                         help="A file that contains instructions (one instruction per line)")
     parser.add_argument('--with_prompt', action='store_true', help="wrap the input with the prompt automatically")
-    parser.add_argument('--interactive', action='store_true', help="run in the instruction mode (single-turn)")
+    # parser.add_argument('--interactive', action='store_true', help="run in the instruction mode (single-turn)")
     parser.add_argument('--predictions_file', default='./predictions.json', type=str)
     parser.add_argument('--gpus', default="0", type=str)
     parser.add_argument('--only_cpu', action='store_true', help='only use CPU for inference')
@@ -120,7 +122,7 @@ def main():
     model.eval()
 
     with torch.no_grad():
-        if args.interactive:
+        # if args.interactive:
             print("Start inference with instruction mode.")
 
             print('=' * 85)
@@ -147,7 +149,20 @@ def main():
                     pad_token_id=tokenizer.pad_token_id,
                     **generation_config
                 )
+                
+                compute = model(inputs["input_ids"].to(device)).logits
+                # binary_representation = [format(np.float32(item).tobytes(),'08b') for item in compute.cpu().numpy()]
+                cpu_tensor = compute
+                # 将 CPU 上的 Tensor 转换为 NumPy 数组
+                numpy_array = cpu_tensor.cpu().numpy().tobytes().hex()
+                # print(numpy_array)
+                # binary_representation = [format(np.float32(item).view(np.int32), '032b') for item in numpy_array]
+                binary_representation = bin(int(numpy_array,16))[2:]
+                print(binary_representation[:8]+"..."+binary_representation[-8:])
+                print(compute.shape)
+                # print(binary_representation)
                 s = generation_output[0]
+                
                 output = tokenizer.decode(s, skip_special_tokens=True)
                 if args.with_prompt:
                     response = output.split("### Response:")[1].strip()
@@ -158,40 +173,40 @@ def main():
                 print("Response: ", response)
                 print(f"Response_tokenizer: {s}\n")
                 print("\n")
-        else:
-            print("Start inference.")
-            results = []
-            for index, example in enumerate(examples):
-                if args.with_prompt is True:
-                    input_text = generate_prompt(instruction=example)
-                else:
-                    input_text = example
-                inputs = tokenizer(input_text, return_tensors="pt")
-                generation_output = model.generate(
-                    input_ids=inputs["input_ids"].to(device),
-                    eos_token_id=tokenizer.eos_token_id,
-                    pad_token_id=tokenizer.pad_token_id,
-                    **generation_config
-                )
-                s = generation_output[0]
-                output = tokenizer.decode(s, skip_special_tokens=True)
-                if args.with_prompt:
-                    response = output.split("### Response:")[1].strip()
-                else:
-                    response = output
-                print(f"======={index}=======")
-                print(f"Input: {example}\n")
-                print(f"Output: {response}\n")
-                print(f"tokenizer: {s}\n")
+        # else:
+        #     print("Start inference.")
+        #     results = []
+        #     for index, example in enumerate(examples):
+        #         if args.with_prompt is True:
+        #             input_text = generate_prompt(instruction=example)
+        #         else:
+        #             input_text = example
+        #         inputs = tokenizer(input_text, return_tensors="pt")
+        #         generation_output = model.generate(
+        #             input_ids=inputs["input_ids"].to(device),
+        #             eos_token_id=tokenizer.eos_token_id,
+        #             pad_token_id=tokenizer.pad_token_id,
+        #             **generation_config
+        #         )                
+        #         s = generation_output[0]
+        #         output = tokenizer.decode(s, skip_special_tokens=True)
+        #         if args.with_prompt:
+        #             response = output.split("### Response:")[1].strip()
+        #         else:
+        #             response = output
+        #         print(f"======={index}=======")
+        #         print(f"Input: {example}\n")
+        #         print(f"Output: {response}\n")
+        #         print(f"tokenizer: {s}\n")
 
-                results.append({"Input": input_text, "Output": response})
+        #         results.append({"Input": input_text, "Output": response})
 
-            dirname = os.path.dirname(args.predictions_file)
-            os.makedirs(dirname, exist_ok=True)
-            with open(args.predictions_file, 'w') as f:
-                json.dump(results, f, ensure_ascii=False, indent=2)
-            with open(dirname + '/generation_config.json', 'w') as f:
-                json.dump(generation_config, f, ensure_ascii=False, indent=2)
+        #     dirname = os.path.dirname(args.predictions_file)
+        #     os.makedirs(dirname, exist_ok=True)
+        #     with open(args.predictions_file, 'w') as f:
+        #         json.dump(results, f, ensure_ascii=False, indent=2)
+        #     with open(dirname + '/generation_config.json', 'w') as f:
+        #         json.dump(generation_config, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
