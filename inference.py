@@ -120,7 +120,6 @@ def main():
     model.eval()
 
     with torch.no_grad():
-        # if args.interactive:
             print("Start inference with instruction mode.")
 
             print('=' * 85)
