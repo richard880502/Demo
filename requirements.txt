@@ -7,3 +7,10 @@ tqdm>=4.47.0
 peft>=0.3.0
 accelerate>=0.20.3
 trl
+protobuf
+cpm_kernels
+torch>=2.0
+gradio
+mdtex2html
+sse-starlette
+streamlit>=1.24.0
